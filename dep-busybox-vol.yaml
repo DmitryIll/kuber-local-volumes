@@ -38,5 +38,6 @@ spec:
           mountPath: /input
       volumes:
       - name: vol
-        hostPath:
-          path: /var/data          
+        emptyDir: {}
+        # hostPath:
+        #   path: /var/data          
