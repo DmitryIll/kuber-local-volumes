@@ -17,7 +17,10 @@ spec:
       containers:
       - name: busybox
         image: busybox
-        command: ['sh', '-c', 'while true; do echo "$(date +%T)">> timefile; sleep 5; done']
+        command: ['sh', '-c', 'while true; do echo "$(date +%T)">> /output/timefile; sleep 5; done']
+        volumeMounts:
+        - name: vol
+          mountPath: /output        
       - name: multitool
         image: wbitt/network-multitool
         env:
@@ -30,3 +33,10 @@ spec:
           name: http-port
         - containerPort: 11443
           name: https-port
+        volumeMounts:
+        - name: vol
+          mountPath: /input
+      volumes:
+      - name: vol
+        hostPath:
+          path: /var/data          
