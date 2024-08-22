@@ -162,8 +162,20 @@ spec:
 
 применяю:
 
+Опять проверил:
 
+![alt text](image-5.png)
 
+![alt text](image-6.png)
+
+![alt text](image-4.png)
+
+Еще на сервере с кубером удалил ранее созданный файл вольюма:
+![alt text](image-7.png)
+
+И проверил что все работает и без него:
+
+![alt text](image-8.png)
 
 ------
 
@@ -177,6 +189,65 @@ spec:
 2. Обеспечить возможность чтения файла `/var/log/syslog` кластера MicroK8S.
 3. Продемонстрировать возможность чтения файла изнутри пода.
 4. Предоставить манифесты Deployment, а также скриншоты или вывод команды из п. 2.
+
+#### Решение
+
+Создал и применил даймонсет:
+
+```
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemonset-mul
+  labels:
+    app: daemonset-mul
+spec:
+  selector:
+    matchLabels:
+      app: daemonset-mul
+  template:
+    metadata:
+      labels:
+        app: daemonset-mul
+    spec:
+      containers:
+      - name: multitool
+        image: wbitt/network-multitool
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "11443"
+        ports:
+        - containerPort: 8080
+          name: http-port
+        - containerPort: 11443
+          name: https-port
+        volumeMounts:
+        - name: vol
+          mountPath: /input
+      volumes:
+      - name: vol
+        hostPath:
+          path: /var/log/syslog
+```
+
+![alt text](image-9.png)
+
+```
+kubectl exec -it daemonset-mul-s5rqq /bin/sh
+```
+выполнил команду:
+
+```
+cat input
+```
+![alt text](image-10.png)
+
+При этом примонтировался именно файла а не папка:
+
+![alt text](image-11.png)
+
 
 ------
 
