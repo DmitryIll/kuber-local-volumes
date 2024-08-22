@@ -17,7 +17,7 @@ spec:
       containers:
       - name: busybox
         image: busybox
-        command: ['sh', '-c', "while true; do echo "$(date +%T)">> timefile; sleep 5; done"]
+        command: ['sh', '-c', 'while true; do echo "$(date +%T)">> timefile; sleep 5; done']
       - name: multitool
         image: wbitt/network-multitool
         env:
