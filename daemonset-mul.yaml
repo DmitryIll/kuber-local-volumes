@@ -5,7 +5,6 @@ metadata:
   labels:
     app: daemonset-mul
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: daemonset-mul
