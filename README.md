@@ -36,37 +36,131 @@
 
 #### Решение
 
-Подготовил команду записи в файл каждый 5 сек:
+Подготовил и протестировал команду записи в файл каждый 5 сек:
 
 ```
 while true; do echo "$(date +%T)">> timefile; sleep 5; done
 ```
 
-Создаю деплоймент:
+Создал деплоймент:
 
 ```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: busybox-vol
   labels:
-    app: nginx
+    app: busybox-vol
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: nginx
+      app: busybox-vol
   template:
     metadata:
       labels:
-        app: nginx
+        app: busybox-vol
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.14.2
+      - name: busybox
+        image: busybox
+        command: ['sh', '-c', 'while true; do echo "$(date +%T)">> /output/timefile; sleep 5; done']
+        volumeMounts:
+        - name: vol
+          mountPath: /output        
+      - name: multitool
+        image: wbitt/network-multitool
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "11443"
         ports:
-        - containerPort: 80
+        - containerPort: 8080
+          name: http-port
+        - containerPort: 11443
+          name: https-port
+        volumeMounts:
+        - name: vol
+          mountPath: /input
+      volumes:
+      - name: vol
+        hostPath:
+          path: /var/data     
 ```
+
+Применил деплоймент.
+
+![alt text](image-1.png)
+
+Подключаюсь к контейнеру мултитула:
+
+```
+kubectl exec -it busybox-vol-6dd9d76698-p8w8x -c multitool /bin/sh
+```
+Захожу в вольюм
+
+![alt text](image-2.png)
+
+Читаю онлайн файл через watch:
+
+![alt text](image.png)
+
+Еще подключился к серверу с кубермикро и проверил файл:
+
+![alt text](image-3.png)
+
+Но, в даном случае постоянный вольюм видимо излишен. Еще пробую переделать на Emtpy dir:
+
+Правлю деплоймент:
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busybox-vol
+  labels:
+    app: busybox-vol
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox-vol
+  template:
+    metadata:
+      labels:
+        app: busybox-vol
+    spec:
+      containers:
+      - name: busybox
+        image: busybox
+        command: ['sh', '-c', 'while true; do echo "$(date +%T)">> /output/timefile; sleep 5; done']
+        volumeMounts:
+        - name: vol
+          mountPath: /output        
+      - name: multitool
+        image: wbitt/network-multitool
+        env:
+        - name: HTTP_PORT
+          value: "8080"
+        - name: HTTPS_PORT
+          value: "11443"
+        ports:
+        - containerPort: 8080
+          name: http-port
+        - containerPort: 11443
+          name: https-port
+        volumeMounts:
+        - name: vol
+          mountPath: /input
+      volumes:
+      - name: vol
+        emptyDir: {}
+        # hostPath:
+        #   path: /var/data 
+```
+
+применяю:
 
 
 
